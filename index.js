@@ -25,7 +25,10 @@ function getNamespace (namespace) {
       });
   }
 
-  return currentPath;
+  return {
+    namespace: currentPath,
+    declaration: output.join('\n')
+  };
 }
 
 var defaults = {
@@ -49,7 +52,7 @@ module.exports = function tojst (fileName, settings) {
 
   var options = assign({}, defaults, settings || {});
   var files = [];
-  var namespace = '';
+  var nsInfo;
 
   function compile (file) {
     var name = options.processName(file.path);
@@ -65,10 +68,10 @@ module.exports = function tojst (fileName, settings) {
     }
 
     if (options.namespace) {
-      namespace = getNamespace(options.namespace);
+      nsInfo = getNamespace(options.namespace);
     }
 
-    return namespace.concat('[', JSON.stringify(name),
+    return nsInfo.namespace.concat('[', JSON.stringify(name),
       '] = ', contents, ';');
   }
 
@@ -91,6 +94,9 @@ module.exports = function tojst (fileName, settings) {
     //if (!compiled.length) {
     //  this.emit('error', pluginError('Destination not written because compiled files were empty.'));
     //} else {
+      if(options.namespace !== false) {
+        compiled.unshift(nsInfo.declaration);
+      }
       if (options.amd) {
         if (options.prettify) {
           compiled.forEach(function(line, index) {
@@ -98,8 +104,8 @@ module.exports = function tojst (fileName, settings) {
           });
         }
         compiled.unshift('define(function(){');
-        if (!options.namespace) {
-          compiled.push('  return '.concat(getNamespace(options.namespace), ';'));
+        if (options.namespace !== false) {
+          compiled.push('  return '.concat(nsInfo.namespace, ';'));
         }
         compiled.push('});');
       }
