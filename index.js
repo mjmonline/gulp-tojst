@@ -52,12 +52,12 @@ module.exports = function tojst (fileName, settings) {
 
   var options = assign({}, defaults, settings || {});
   var files = [];
-  var nsInfo;
 
   function compile (file) {
     var name = options.processName(file.path);
     var contents = template(file.contents.toString(),
       options.templateSettings).source;
+    var nsInfo;
 
     if (options.prettify) {
       contents = contents.replace(/\n/g, '');
@@ -90,6 +90,7 @@ module.exports = function tojst (fileName, settings) {
 
   function end () {
     var compiled = files.map(compile);
+    var nsInfo = getNamespace(options.namespace);
 
     //if (!compiled.length) {
     //  this.emit('error', pluginError('Destination not written because compiled files were empty.'));
